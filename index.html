@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eines de Formació — Bexperience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root {
+  --bg: #07090e;
+  --surface: rgba(255,255,255,0.03);
+  --surface-hover: rgba(255,255,255,0.055);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.16);
+  --text: #e2d9cc;
+  --text-dim: #3a4a5e;
+  --text-mid: #6a7a8e;
+  --accent: #4DDDE8;
+  --accent-dim: rgba(77,221,232,0.1);
+  --navy: #0a2e5c;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --card-color: var(--accent);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Lora', Georgia, serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRAIN OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ── GRID BG ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── WRAPPER ── */
+.wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(32px, 6vw, 72px) clamp(20px, 5vw, 48px) 80px;
+}
+
+/* ── HEADER ── */
+.site-header {
+  margin-bottom: clamp(48px, 8vw, 80px);
+  animation: fadeUp 0.7s ease both;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.eyebrow-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-mark {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid rgba(77,221,232,0.4);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eyebrow-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.eyebrow-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}
+.eyebrow-sub {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px;
+  font-weight: 200;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+.header-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(28px, 5.5vw, 58px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.header-title em {
+  font-style: normal;
+  color: var(--accent);
+  font-weight: 200;
+}
+.header-desc {
+  font-size: clamp(13px, 1.5vw, 15px);
+  color: var(--text-mid);
+  line-height: 1.75;
+  max-width: 500px;
+  font-style: italic;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px 11px 40px;
+  color: var(--text);
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.25s ease;
+}
+.search-input::placeholder { color: var(--text-dim); font-style: italic; }
+.search-input:focus {
+  border-color: rgba(77,221,232,0.4);
+  background: rgba(77,221,232,0.04);
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+  white-space: nowrap;
+}
+.filter-btn:hover { border-color: var(--border-hover); color: var(--text); }
+.filter-btn.active {
+  background: var(--accent-dim);
+  border-color: rgba(77,221,232,0.4);
+  color: var(--accent);
+}
+
+.toolbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.count-badge {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+.count-badge span {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ── STATUS STRIP ── */
+.status-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 28px;
+  animation: fadeIn 0.5s 0.2s ease both;
+  opacity: 0;
+}
+.status-strip.loaded { opacity: 1; }
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+.status-dot.static { animation: none; background: var(--text-dim); }
+.status-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+.status-text a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.status-text a:hover { text-decoration: underline; }
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  animation: fadeUp 0.7s 0.15s ease both;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
+  position: relative;
+  cursor: pointer;
+}
+.card:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
+}
+.card.hidden { display: none; }
+
+.card-bar {
+  height: 3px;
+  background: var(--card-color, var(--accent));
+  transform-origin: left;
+  animation: barGrow 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+.card-body {
+  padding: 20px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 12px;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-glyph {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.card:hover .card-glyph {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+}
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.tag {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--text-mid);
+  background: transparent;
+}
+.tag.primary {
+  border-color: rgba(77,221,232,0.25);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.card-name {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(12px, 1.4vw, 14px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.7;
+  font-style: italic;
+  flex: 1;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.card-client {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.card-arrow {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  transition: all 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.card:hover .card-arrow {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateX(2px);
+  background: var(--accent-dim);
+}
+
+/* ── ESTAT BADGE ── */
+.estat-badge {
+  display: inline-block;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 7px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+}
+.estat-publicada { color: #06d6a0; border-color: rgba(6,214,160,0.3); background: rgba(6,214,160,0.08); }
+.estat-nova      { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+.estat-draft     { color: var(--text-dim); border-color: var(--border); background: transparent; }
+.estat-actualitzar { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: none;
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 60px 20px;
+}
+.empty-state.visible { display: block; }
+.empty-state p {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+/* ── FOOTER ── */
+.site-footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-brand {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.footer-link {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-link:hover { color: var(--accent); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .grid { grid-template-columns: 1fr; }
+  .toolbar { gap: 10px; }
+  .toolbar-right { margin-left: 0; width: 100%; }
+}
+
+/* ── SECTION DIVIDER ── */
+.section-label {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  grid-column: 1/-1;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-eyebrow">
+      <div class="eyebrow-logo">
+        <div class="logo-mark">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7h10M7 2v10" stroke="#4DDDE8" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M4 4l6 6M10 4L4 10" stroke="#4DDDE8" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+          </svg>
+        </div>
+        <span class="eyebrow-text">Bexperience</span>
+      </div>
+      <div class="eyebrow-sep"></div>
+      <span class="eyebrow-sub">Eines de Formació</span>
+    </div>
+    <h1 class="header-title">El teu<br><em>laboratori</em><br>de formació</h1>
+    <p class="header-desc">Eines interactives per a sessions d'IA amb clients. Cadascuna dissenyada per a un context específic.</p>
+  </header>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M9.5 9.5l2.5 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <input class="search-input" type="text" id="search" placeholder="Cerca per nom o client...">
+    </div>
+
+    <div class="filters" id="filters-client">
+      <button class="filter-btn active" data-filter="client" data-val="tots">Tots</button>
+      <button class="filter-btn" data-filter="client" data-val="ICS Girona">ICS Girona</button>
+      <button class="filter-btn" data-filter="client" data-val="Tecnical">Tecnical</button>
+      <button class="filter-btn" data-filter="client" data-val="Tots els clients">Genèriques</button>
+    </div>
+
+    <div class="filters" id="filters-tipus">
+      <button class="filter-btn" data-filter="tipus" data-val="Joc competitiu">Joc</button>
+      <button class="filter-btn" data-filter="tipus" data-val="Ruleta">Ruleta</button>
+      <button class="filter-btn" data-filter="tipus" data-val="Calculadora">Calculadora</button>
+      <button class="filter-btn" data-filter="tipus" data-val="Dashboard">Dashboard</button>
+      <button class="filter-btn" data-filter="tipus" data-val="Generador IA">Generador IA</button>
+    </div>
+
+    <div class="toolbar-right">
+      <span class="count-badge"><span id="count">6</span> eines</span>
+    </div>
+  </div>
+
+  <!-- STATUS STRIP -->
+  <div class="status-strip loaded" id="status-strip">
+    <div class="status-dot static" id="status-dot"></div>
+    <span class="status-text" id="status-text">Dades locals · <a href="#" onclick="connectSheets(); return false;">Connecta Google Sheets per actualització automàtica</a></span>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid" id="grid">
+    <div class="empty-state" id="empty">
+      <p>Cap eina coincideix amb els filtres actuals</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <span class="footer-brand">Bexperience · Eines de Formació · 2026</span>
+    <a class="footer-link" href="https://github.com/mvalls12/eines-formacio" target="_blank">GitHub</a>
+  </footer>
+
+</div>
+
+<script>
+/* ── ════════════════════════════════════════════
+   CONFIGURACIÓ — EDITA AQUÍ
+   ════════════════════════════════════════════ */
+
+// Quan tinguis la URL del CSV de Google Sheets, posa-la aquí:
+const SHEETS_CSV_URL = '';
+// Exemple: 'https://docs.google.com/spreadsheets/d/ID/export?format=csv&gid=0'
+
+/* ── DADES LOCALS (fallback fins que connectis Sheets) ── */
+const LOCAL_DATA = [
+  {
+    nom: "Dashboard Emocions",
+    client: "Tots els clients",
+    tipus: "Dashboard",
+    eina_ia: "Genèric",
+    estat: "Publicada",
+    sector: "Tots",
+    url: "emotions-dashboard-v2.html",
+    notes: "Dashboard d'exploració emocional per a qualsevol formació",
+    color: "#9b5de5",
+    delay: "0s"
+  },
+  {
+    nom: "Calculadora ROI Formació IA",
+    client: "Tots els clients",
+    tipus: "Calculadora",
+    eina_ia: "Genèric",
+    estat: "Publicada",
+    sector: "Tots",
+    url: "roi-formacio-ia.html",
+    notes: "Càlcul ROI d'una formació IA per empresa. Útil per a propostes comercials",
+    color: "#06d6a0",
+    delay: "0.08s"
+  },
+  {
+    nom: "Duel de Prompts",
+    client: "ICS Girona",
+    tipus: "Joc competitiu",
+    eina_ia: "Claude / ChatGPT",
+    estat: "Publicada",
+    sector: "Salut",
+    url: "https://mentor-ia.es/Formacions/duel-prompts.html",
+    notes: "Joc competitiu de prompts per a professionals sanitaris",
+    color: "#ef476f",
+    delay: "0.16s"
+  },
+  {
+    nom: "Ruleta de Reptes Copilot",
+    client: "ICS Girona",
+    tipus: "Ruleta",
+    eina_ia: "Microsoft Copilot",
+    estat: "Publicada",
+    sector: "Salut",
+    url: "ruleta-ics.html",
+    notes: "Ruleta de casos d'ús Copilot per a sessions ICS",
+    color: "#4DDDE8",
+    delay: "0.24s"
+  },
+  {
+    nom: "Explorador IA Generativa",
+    client: "ICS Girona",
+    tipus: "Explorador",
+    eina_ia: "Genèric",
+    estat: "Publicada",
+    sector: "Salut",
+    url: "explorador-ia-ics.html",
+    notes: "Explorador de 3 sectors d'IA generativa aplicada a salut",
+    color: "#60a5fa",
+    delay: "0.32s"
+  },
+  {
+    nom: "Generador d'Escenaris IA",
+    client: "Tecnical",
+    tipus: "Generador IA",
+    eina_ia: "Microsoft Copilot",
+    estat: "Nova",
+    sector: "Industrial",
+    url: "generador-escenaris-tecnical.html",
+    notes: "Escenaris personalitzats per rol i empresa, amb Claude API integrada",
+    color: "#fbbf24",
+    delay: "0.40s"
+  }
+];
+
+/* ── GLYPHS per tipus ── */
+const GLYPHS = {
+  "Joc competitiu": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11c0-3.866 3.134-7 7-7s7 3.134 7 7-3.134 7-7 7-7-3.134-7-7z" stroke="currentColor" stroke-width="1.2"/><path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  "Ruleta": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M11 4v7l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="11" cy="11" r="1.5" fill="currentColor"/></svg>`,
+  "Calculadora": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="5" y="4" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M8 8h6M8 11h2M12 11h2M8 14h2M12 14h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "Dashboard": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="4" y="4" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="12" y="4" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="4" y="12" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/><rect x="12" y="12" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>`,
+  "Explorador": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M4 11h14M11 4c-2 3-2 10 0 14M11 4c2 3 2 10 0 14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>`,
+  "Generador IA": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 4l1.5 4.5H17l-3.75 2.75 1.5 4.5L11 13l-4.75 2.75 1.5-4.5L4 8.5h4.5L11 4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
+  "Diagnòstic": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h3l2-5 3 10 2-5h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  "Activitat": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M5 18c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "default": `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="4" y="4" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.2"/><path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`
+};
+
+/* ── ESTAT ── */
+let allData = [];
+let activeClientFilter = 'tots';
+let activeTipusFilter = null;
+let searchQuery = '';
+
+/* ── RENDER ── */
+function renderCards(data) {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('count');
+
+  // Neteja (manté empty-state)
+  [...grid.querySelectorAll('.card, .section-label')].forEach(el => el.remove());
+
+  // Filtre
+  let filtered = data.filter(item => {
+    const matchClient = activeClientFilter === 'tots' || item.client === activeClientFilter;
+    const matchTipus = !activeTipusFilter || item.tipus === activeTipusFilter;
+    const matchSearch = !searchQuery ||
+      item.nom.toLowerCase().includes(searchQuery) ||
+      item.client.toLowerCase().includes(searchQuery) ||
+      (item.notes || '').toLowerCase().includes(searchQuery);
+    return matchClient && matchTipus && matchSearch;
+  });
+
+  count.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    empty.classList.add('visible');
+    return;
+  }
+  empty.classList.remove('visible');
+
+  filtered.forEach((item, i) => {
+    const card = document.createElement('a');
+    card.className = 'card';
+    card.href = item.url || '#';
+    card.target = '_blank';
+    card.style.setProperty('--card-color', item.color || 'var(--accent)');
+    card.style.animationDelay = item.delay || `${i * 0.06}s`;
+    card.style.animation = `fadeUp 0.5s ${item.delay || i * 0.06 + 's'} ease both`;
+
+    const glyph = GLYPHS[item.tipus] || GLYPHS['default'];
+    const estatClass = 'estat-' + (item.estat || 'draft').toLowerCase().replace(/ /g, '');
+    const estatLabel = item.estat || '';
+
+    card.innerHTML = `
+      <div class="card-bar"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-glyph" style="color:${item.color || 'var(--accent)'}">
+            ${glyph}
+          </div>
+          <div class="card-tags">
+            <span class="tag primary">${item.tipus || ''}</span>
+            <span class="estat-badge ${estatClass}">${estatLabel}</span>
+          </div>
+        </div>
+        <div class="card-name">${item.nom}</div>
+        <p class="card-desc">${item.notes || item.eina_ia || ''}</p>
+        <div class="card-footer">
+          <span class="card-client">${item.client}</span>
+          <div class="card-arrow">
+            <svg viewBox="0 0 12 12" fill="none" width="12" height="12">
+              <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ── PARSE CSV ── */
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
+
+  // Mapa de colors per tipus
+  const colorMap = {
+    'joc competitiu': '#ef476f',
+    'ruleta': '#4DDDE8',
+    'calculadora': '#06d6a0',
+    'dashboard': '#9b5de5',
+    'explorador': '#60a5fa',
+    'generador ia': '#fbbf24',
+    'diagnòstic': '#34d399',
+    'activitat': '#fb923c'
+  };
+
+  return lines.slice(1).map((line, i) => {
+    // Parse CSV amb suport per comes dins cometes
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    cols.push(cur.trim());
+
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+
+    const tipus = (obj["tipus"] || obj["tipus d'eina"] || '').trim();
+    return {
+      nom:    obj["nom de l'eina"] || obj["nom"] || '',
+      client: obj["client"] || '',
+      tipus:  tipus,
+      eina_ia: obj["eina ia"] || '',
+      estat:  obj["estat"] || 'Publicada',
+      sector: obj["sector"] || '',
+      url:    obj["url / fitxer"] || obj["url"] || '#',
+      notes:  obj["notes"] || '',
+      color:  colorMap[tipus.toLowerCase()] || 'var(--accent)',
+      delay:  `${i * 0.06}s`
+    };
+  }).filter(item => item.nom);
+}
+
+/* ── LOAD SHEETS ── */
+async function loadFromSheets(url) {
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  dot.classList.remove('static');
+  text.textContent = 'Carregant des de Google Sheets...';
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Error ' + res.status);
+    const csv = await res.text();
+    const data = parseCSV(csv);
+    if (data.length === 0) throw new Error('Cap dada trobada');
+    allData = data;
+    renderCards(allData);
+    updateClientFilters(allData);
+    dot.classList.remove('static');
+    text.innerHTML = `Sincronitzat amb Google Sheets · ${data.length} eines · <small style="opacity:.6">${new Date().toLocaleTimeString('ca')}</small>`;
+    return true;
+  } catch (err) {
+    dot.classList.add('static');
+    text.innerHTML = `Error de connexió amb Sheets · Mostrant dades locals`;
+    return false;
+  }
+}
+
+function connectSheets() {
+  const url = prompt('Enganxa la URL del CSV de Google Sheets:');
+  if (url && url.includes('spreadsheet')) {
+    localStorage.setItem('bex_sheets_url', url);
+    loadFromSheets(url);
+  }
+}
+
+/* ── ACTUALITZA FILTRES DE CLIENT ── */
+function updateClientFilters(data) {
+  const clients = [...new Set(data.map(d => d.client))].filter(Boolean);
+  const container = document.getElementById('filters-client');
+  const existing = [...container.querySelectorAll('[data-val]:not([data-val="tots"])')].map(b => b.dataset.val);
+  clients.forEach(client => {
+    if (!existing.includes(client)) {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.filter = 'client';
+      btn.dataset.val = client;
+      btn.textContent = client;
+      container.appendChild(btn);
+      btn.addEventListener('click', handleFilter);
+    }
+  });
+}
+
+/* ── FILTRES ── */
+function handleFilter(e) {
+  const btn = e.currentTarget;
+  const filterType = btn.dataset.filter;
+  const val = btn.dataset.val;
+
+  if (filterType === 'client') {
+    document.querySelectorAll('[data-filter="client"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeClientFilter = val;
+  } else if (filterType === 'tipus') {
+    if (btn.classList.contains('active')) {
+      btn.classList.remove('active');
+      activeTipusFilter = null;
+    } else {
+      document.querySelectorAll('[data-filter="tipus"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTipusFilter = val;
+    }
+  }
+  renderCards(allData);
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', async () => {
+  // Listeners filtres
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', handleFilter);
+  });
+
+  // Search
+  document.getElementById('search').addEventListener('input', e => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderCards(allData);
+  });
+
+  // Carrega dades
+  const savedUrl = localStorage.getItem('bex_sheets_url') || SHEETS_CSV_URL;
+  let loaded = false;
+  if (savedUrl) {
+    loaded = await loadFromSheets(savedUrl);
+  }
+  if (!loaded) {
+    allData = LOCAL_DATA;
+    renderCards(allData);
+    const dot = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    dot.classList.add('static');
+    text.innerHTML = `Dades locals · <a href="#" onclick="connectSheets(); return false;">Connecta Google Sheets per actualització automàtica</a>`;
+  }
+});
+</script>
+</body>
+</html>
