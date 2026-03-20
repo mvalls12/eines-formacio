@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora ROI — Bexperience</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ─── */
+:root {
+  --bg: #f5f0e8;
+  --surface: rgba(0,0,0,0.03);
+  --surface-hover: rgba(0,0,0,0.06);
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.18);
+  --text: #2c2417;
+  --text-dim: #9a8e7f;
+  --text-mid: #6b5f50;
+  --accent: #06d6a0;
+  --accent2: #60a5fa;
+  --accent3: #9b5de5;
+  --accent-neg: #ef476f;
+  --accent-warn: #fbbf24;
+  --radius: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Lora', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── HEADER ─── */
+.header {
+  text-align: center;
+  padding: clamp(1.5rem, 4vh, 3rem) 2rem clamp(1rem, 2vh, 1.5rem);
+  animation: fadeUp 0.8s ease-out;
+}
+.header h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header p {
+  color: var(--text-mid);
+  font-size: clamp(0.85rem, 1.3vw, 1.05rem);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* ── LAYOUT ─── */
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 4vw, 3rem) 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  animation: fadeUp 0.8s ease-out 0.15s both;
+}
+@media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+}
+.panel-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.panel-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* ── SLIDERS ─── */
+.slider-group {
+  margin-bottom: 1.8rem;
+}
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.6rem;
+}
+.slider-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  color: var(--text-mid);
+}
+.slider-value {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.slider-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 0.3rem;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: 2px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: 2px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+/* ── RESULTS PANEL ─── */
+.result-hero {
+  text-align: center;
+  padding: 2rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.result-roi-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 200;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+.result-roi-value {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 1;
+  transition: color 0.3s;
+}
+.result-roi-sub {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.8rem;
+  color: var(--text-mid);
+  margin-top: 0.5rem;
+}
+
+/* ── METRICS ─── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.metric-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s;
+}
+.metric-card:hover { border-color: var(--border-hover); }
+.metric-value {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+}
+.metric-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 200;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+}
+
+/* ── COMPARISON BAR ─── */
+.comparison {
+  margin-bottom: 1.5rem;
+}
+.comparison-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 0.8rem;
+}
+.comparison-bar {
+  display: flex;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.03);
+}
+.bar-before {
+  background: var(--accent-neg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: #fff;
+  transition: width 0.8s cubic-bezier(0.34, 1.2, 0.64, 1);
+  min-width: 60px;
+}
+.bar-after {
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: #fff;
+  transition: width 0.8s cubic-bezier(0.34, 1.2, 0.64, 1);
+  min-width: 60px;
+}
+.comparison-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* ── TIMELINE ─── */
+.timeline {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.timeline-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+.timeline-months {
+  display: flex;
+  gap: 0.5rem;
+}
+.timeline-month {
+  flex: 1;
+  text-align: center;
+}
+.timeline-bar-container {
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.timeline-bar {
+  width: 70%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
+  min-height: 4px;
+}
+.timeline-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+}
+.timeline-amount {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  margin-top: 0.2rem;
+}
+
+/* ── REFLECTION ─── */
+.reflection {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  background: rgba(6,214,160,0.08);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  animation: fadeUp 0.6s ease-out 0.4s both;
+}
+
+/* ── FOOTER ─── */
+.footer {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 200;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Calculadora ROI d'IA</h1>
+  <p>Estima l'impacte econ&ograve;mic d'implementar intel&middot;lig&egrave;ncia artificial al teu equip</p>
+</div>
+
+<div class="container">
+  <!-- INPUT PANEL -->
+  <div class="panel">
+    <div class="panel-title">
+      <svg class="panel-icon" viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="var(--accent2)" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="var(--accent2)" stroke-width="1.5"/></svg>
+      Par&agrave;metres de l'equip
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Persones a l'equip</span>
+        <span class="slider-value" id="valTeam">10</span>
+      </div>
+      <input type="range" min="1" max="100" value="10" id="slTeam" oninput="update()">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Cost/hora per persona</span>
+        <span class="slider-value" id="valCost">35&euro;</span>
+      </div>
+      <input type="range" min="15" max="120" value="35" id="slCost" oninput="update()">
+      <div class="slider-hint">Inclou salari brut + costos indirectes</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Hores/setmana en tasques repetitives</span>
+        <span class="slider-value" id="valHours">12h</span>
+      </div>
+      <input type="range" min="1" max="40" value="12" id="slHours" oninput="update()">
+      <div class="slider-hint">Emails, informes, introducci&oacute; de dades, cerques...</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">% automatitzable amb IA</span>
+        <span class="slider-value" id="valAuto">40%</span>
+      </div>
+      <input type="range" min="10" max="80" value="40" id="slAuto" oninput="update()">
+      <div class="slider-hint">Conservador: 20-30% | Moderat: 40-50% | Optimista: 60%+</div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-label">Inversi&oacute; en IA (anual)</span>
+        <span class="slider-value" id="valInvest">15.000&euro;</span>
+      </div>
+      <input type="range" min="1000" max="100000" value="15000" step="1000" id="slInvest" oninput="update()">
+      <div class="slider-hint">Llic&egrave;ncies, formaci&oacute;, consultoria, implementaci&oacute;</div>
+    </div>
+  </div>
+
+  <!-- RESULTS PANEL -->
+  <div class="panel">
+    <div class="panel-title">
+      <svg class="panel-icon" viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/><path d="M7 14l4-4 3 3 5-7" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Resultat estimat
+    </div>
+
+    <div class="result-hero">
+      <div class="result-roi-label">Retorn d'inversi&oacute;</div>
+      <div class="result-roi-value" id="roiValue">348%</div>
+      <div class="result-roi-sub" id="roiSub">Recuperes la inversi&oacute; en 3.4 mesos</div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value" id="metricSave" style="color:var(--accent)">67.200&euro;</div>
+        <div class="metric-label">Estalvi anual</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metricHours" style="color:var(--accent2)">2.496h</div>
+        <div class="metric-label">Hores alliberades/any</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metricWeek" style="color:var(--accent3)">48h</div>
+        <div class="metric-label">Hores/setmana recuperades</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="metricNet" style="color:var(--accent-warn)">52.200&euro;</div>
+        <div class="metric-label">Benefici net anual</div>
+      </div>
+    </div>
+
+    <div class="comparison">
+      <div class="comparison-title">Comparativa setmanal</div>
+      <div class="comparison-bar">
+        <div class="bar-before" id="barBefore" style="width:60%">120h</div>
+        <div class="bar-after" id="barAfter" style="width:40%">72h</div>
+      </div>
+      <div class="comparison-legend">
+        <span style="color:var(--accent-neg)">Abans (tasques repetitives)</span>
+        <span style="color:var(--accent)">Despr&eacute;s (amb IA)</span>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-title">Estalvi acumulat per trimestre</div>
+      <div class="timeline-months" id="timeline"></div>
+    </div>
+  </div>
+</div>
+
+<div class="reflection" style="max-width:1300px;margin:1rem auto 0;padding:1.2rem clamp(1.5rem,4vw,3rem);">
+  El ROI de la IA no &eacute;s nom&eacute;s econ&ograve;mic. Les hores alliberades s&oacute;n hores que el teu equip pot dedicar a pensar, crear i connectar amb les persones. La pregunta no &eacute;s si val la pena, sin&oacute; qu&egrave; fareu amb el temps recuperat.
+</div>
+
+<div class="footer">Bexperience &middot; Calculadora ROI d'IA &middot; 2026</div>
+
+<script>
+/* ── CALCULATION ─── */
+function update() {
+  const team = parseInt(document.getElementById('slTeam').value);
+  const cost = parseInt(document.getElementById('slCost').value);
+  const hours = parseInt(document.getElementById('slHours').value);
+  const auto = parseInt(document.getElementById('slAuto').value);
+  const invest = parseInt(document.getElementById('slInvest').value);
+
+  // Update displayed values
+  document.getElementById('valTeam').textContent = team;
+  document.getElementById('valCost').textContent = cost + '\u20ac';
+  document.getElementById('valHours').textContent = hours + 'h';
+  document.getElementById('valAuto').textContent = auto + '%';
+  document.getElementById('valInvest').textContent = invest.toLocaleString('ca') + '\u20ac';
+
+  // Calculations
+  const weeklyRepetitiveHours = team * hours;
+  const weeklyAutoHours = weeklyRepetitiveHours * (auto / 100);
+  const annualHoursSaved = weeklyAutoHours * 52;
+  const annualSaving = annualHoursSaved * cost;
+  const netBenefit = annualSaving - invest;
+  const roi = invest > 0 ? ((annualSaving - invest) / invest * 100) : 0;
+  const paybackMonths = annualSaving > 0 ? (invest / (annualSaving / 12)) : 99;
+
+  // ROI display
+  const roiEl = document.getElementById('roiValue');
+  roiEl.textContent = Math.round(roi) + '%';
+  roiEl.style.color = roi > 0 ? 'var(--accent)' : 'var(--accent-neg)';
+
+  const roiSub = document.getElementById('roiSub');
+  if (roi > 0) {
+    roiSub.textContent = `Recuperes la inversi\u00f3 en ${paybackMonths.toFixed(1)} mesos`;
+  } else {
+    roiSub.textContent = 'La inversi\u00f3 supera l\'estalvi estimat';
+  }
+
+  // Metrics
+  document.getElementById('metricSave').textContent = Math.round(annualSaving).toLocaleString('ca') + '\u20ac';
+  document.getElementById('metricHours').textContent = Math.round(annualHoursSaved).toLocaleString('ca') + 'h';
+  document.getElementById('metricWeek').textContent = Math.round(weeklyAutoHours) + 'h';
+  const metricNetEl = document.getElementById('metricNet');
+  metricNetEl.textContent = Math.round(netBenefit).toLocaleString('ca') + '\u20ac';
+  metricNetEl.style.color = netBenefit >= 0 ? 'var(--accent-warn)' : 'var(--accent-neg)';
+
+  // Comparison bar
+  const totalWidth = weeklyRepetitiveHours;
+  const beforePct = totalWidth > 0 ? ((weeklyRepetitiveHours - weeklyAutoHours) / weeklyRepetitiveHours * 100) : 50;
+  const afterPct = 100 - beforePct;
+  document.getElementById('barBefore').style.width = Math.max(beforePct, 10) + '%';
+  document.getElementById('barBefore').textContent = Math.round(weeklyRepetitiveHours) + 'h';
+  document.getElementById('barAfter').style.width = Math.max(afterPct, 10) + '%';
+  document.getElementById('barAfter').textContent = Math.round(weeklyAutoHours) + 'h estalviades';
+
+  // Timeline (quarterly)
+  const quarterSaving = annualSaving / 4;
+  const quarterInvest = invest / 4;
+  const quarters = [
+    { label: 'T1', amount: quarterSaving * 0.3 - quarterInvest, note: 'Implementaci\u00f3' },
+    { label: 'T2', amount: quarterSaving * 0.7 - quarterInvest * 0.3, note: 'Adopci\u00f3' },
+    { label: 'T3', amount: quarterSaving * 0.9, note: 'Maduresa' },
+    { label: 'T4', amount: quarterSaving, note: 'Velocitat de creuer' }
+  ];
+  const maxAmount = Math.max(...quarters.map(q => Math.abs(q.amount)), 1);
+
+  document.getElementById('timeline').innerHTML = quarters.map(q => {
+    const height = Math.max(Math.abs(q.amount) / maxAmount * 80, 4);
+    const color = q.amount >= 0 ? 'var(--accent)' : 'var(--accent-neg)';
+    return `
+      <div class="timeline-month">
+        <div class="timeline-bar-container">
+          <div class="timeline-bar" style="height:${height}px;background:${color}"></div>
+        </div>
+        <div class="timeline-label">${q.label}</div>
+        <div class="timeline-amount" style="color:${color}">${q.amount >= 0 ? '+' : ''}${Math.round(q.amount).toLocaleString('ca')}\u20ac</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ── INIT ─── */
+update();
+</script>
+</body>
+</html>
