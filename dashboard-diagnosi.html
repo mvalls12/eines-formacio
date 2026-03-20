@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Diagnosi — Bexperience</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ─── */
+:root {
+  --bg: #f5f0e8;
+  --surface: rgba(0,0,0,0.03);
+  --surface-hover: rgba(0,0,0,0.06);
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.18);
+  --text: #2c2417;
+  --text-dim: #9a8e7f;
+  --text-mid: #6b5f50;
+  --accent-ia: #9b5de5;
+  --accent-digit: #60a5fa;
+  --accent-org: #06d6a0;
+  --accent-urgent: #ef476f;
+  --accent-warn: #fbbf24;
+  --radius: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Lora', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── LANDING / IMPORT SCREEN ─── */
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  animation: fadeUp 0.8s ease-out;
+}
+.landing-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  background: linear-gradient(135deg, var(--accent-ia), var(--accent-digit));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+.landing-sub {
+  color: var(--text-mid);
+  font-size: 1.05rem;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 3rem;
+  max-width: 500px;
+}
+.landing-options {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 800px;
+  width: 100%;
+}
+.landing-card {
+  flex: 1;
+  min-width: 280px;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  text-align: center;
+}
+.landing-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  background: var(--surface-hover);
+}
+.landing-card-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1.2rem;
+}
+.landing-card-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+.landing-card-desc {
+  color: var(--text-mid);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ── IMPORT MODAL ─── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(7,9,14,0.9);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+  max-width: 600px;
+  width: 100%;
+  animation: fadeUp 0.3s ease-out;
+}
+.modal-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+.modal-hint {
+  color: var(--text-mid);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+.json-area {
+  width: 100%;
+  min-height: 250px;
+  background: rgba(0,0,0,0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+.json-area:focus { outline: none; border-color: var(--accent-ia); }
+.json-area.drag-over { border-color: var(--accent-ia); background: rgba(155,93,229,0.08); }
+.modal-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 1.2rem;
+}
+.modal-error {
+  color: var(--accent-urgent);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  display: none;
+}
+.modal-error.show { display: block; }
+.file-drop-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  margin-bottom: 0.8rem;
+}
+.file-input-wrapper {
+  position: relative;
+}
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.file-btn {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.file-btn:hover { border-color: var(--accent-ia); color: var(--accent-ia); }
+
+/* ── DASHBOARD (hidden until data loaded) ─── */
+.dashboard { display: none; }
+.dashboard.active { display: block; }
+
+/* ── HEADER ─── */
+.header {
+  padding: clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 4vw, 3rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  animation: fadeUp 0.6s ease-out;
+}
+.header-left h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  background: linear-gradient(135deg, var(--accent-ia), var(--accent-digit));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header-left p {
+  color: var(--text-mid);
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+  font-style: italic;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.client-badge {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.icon-btn:hover { border-color: var(--border-hover); color: var(--text); }
+.icon-btn svg { width: 16px; height: 16px; }
+
+/* ── CLIENT PROFILE ─── */
+.profile-bar {
+  padding: 0 clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: 1rem;
+  animation: fadeUp 0.6s ease-out 0.05s both;
+}
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.profile-item-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 200;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+}
+.profile-item-value {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* ── STATS BAR ─── */
+.stats-bar {
+  display: flex;
+  gap: 1rem;
+  padding: 0 clamp(1.5rem, 4vw, 3rem);
+  flex-wrap: wrap;
+  animation: fadeUp 0.6s ease-out 0.1s both;
+}
+.stat-card {
+  flex: 1;
+  min-width: 130px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.stat-number {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+}
+.stat-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 200;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+}
+
+/* ── FILTERS ─── */
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1.5rem clamp(1.5rem, 4vw, 3rem) 0.5rem;
+  flex-wrap: wrap;
+  animation: fadeUp 0.6s ease-out 0.15s both;
+}
+.filter-btn {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.filter-btn:hover { border-color: var(--border-hover); color: var(--text); }
+.filter-btn.active { color: #fff; border-color: transparent; }
+.filter-btn[data-filter="all"].active { background: linear-gradient(135deg, var(--accent-ia), var(--accent-digit)); }
+.filter-btn[data-filter="ia"].active { background: var(--accent-ia); }
+.filter-btn[data-filter="digit"].active { background: var(--accent-digit); }
+.filter-btn[data-filter="org"].active { background: var(--accent-org); }
+
+/* ── SOURCE INDICATOR ─── */
+.source-tag {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+.source-tag.web { color: var(--accent-digit); border: 1px solid rgba(96,165,250,0.3); }
+.source-tag.meeting { color: var(--accent-org); border: 1px solid rgba(6,214,160,0.3); }
+.source-tag.manual { color: var(--text-dim); border: 1px solid var(--border); }
+
+/* ── MAIN GRID ─── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem clamp(1.5rem, 4vw, 3rem);
+  animation: fadeUp 0.6s ease-out 0.2s both;
+}
+@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* ── PAIN POINT CARD ─── */
+.pain-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+.pain-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+}
+.pain-card[data-type="ia"]::before { background: var(--accent-ia); }
+.pain-card[data-type="digit"]::before { background: var(--accent-digit); }
+.pain-card[data-type="org"]::before { background: var(--accent-org); }
+.pain-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  background: var(--surface-hover);
+}
+.pain-card.expanded { grid-column: 1 / -1; }
+.pain-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.pain-card-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+}
+.pain-card-tags { display: flex; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; }
+.tag {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid;
+}
+.tag-ia { color: var(--accent-ia); border-color: rgba(155,93,229,0.3); }
+.tag-digit { color: var(--accent-digit); border-color: rgba(96,165,250,0.3); }
+.tag-org { color: var(--accent-org); border-color: rgba(6,214,160,0.3); }
+.tag-urgent { color: var(--accent-urgent); border-color: rgba(239,71,111,0.3); background: rgba(239,71,111,0.1); }
+.pain-card-desc {
+  color: var(--text-mid);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.pain-card-detail {
+  display: none;
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+.pain-card.expanded .pain-card-detail { display: block; }
+.impact-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+.impact-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  min-width: 60px;
+}
+.impact-track { flex: 1; height: 6px; background: rgba(0,0,0,0.04); border-radius: 3px; overflow: hidden; }
+.impact-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.34, 1.2, 0.64, 1); }
+.impact-value {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  min-width: 30px;
+  text-align: right;
+}
+.solution-box {
+  background: rgba(155,93,229,0.08);
+  border-left: 3px solid var(--accent-ia);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.2rem;
+  margin-top: 1rem;
+}
+.solution-box h4 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent-ia);
+  margin-bottom: 0.5rem;
+}
+.solution-box p { color: var(--text-mid); font-size: 0.9rem; line-height: 1.6; }
+
+/* ── CARD ACTIONS (delete, edit) ─── */
+.card-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+.card-action-btn {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.6rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.card-action-btn:hover { border-color: var(--border-hover); color: var(--text); }
+.card-action-btn.delete:hover { border-color: var(--accent-urgent); color: var(--accent-urgent); }
+
+/* ── MATRIU ─── */
+.matrix-section {
+  padding: 2rem clamp(1.5rem, 4vw, 3rem);
+  animation: fadeUp 0.6s ease-out 0.3s both;
+}
+.matrix-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  margin-bottom: 1.5rem;
+}
+.matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  background: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  height: 400px;
+}
+.matrix-quadrant {
+  background: var(--bg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.matrix-quadrant-label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.8rem;
+}
+.q-quick { color: var(--accent-org); }
+.q-strategic { color: var(--accent-digit); }
+.q-plan { color: var(--accent-warn); }
+.q-reconsider { color: var(--text-dim); }
+.matrix-items { display: flex; flex-direction: column; gap: 0.4rem; flex: 1; overflow-y: auto; }
+.matrix-item { font-size: 0.8rem; color: var(--text-mid); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.5rem; }
+.matrix-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── ADD / EDIT FORM ─── */
+.add-section {
+  padding: 1.5rem clamp(1.5rem, 4vw, 3rem) 1rem;
+  animation: fadeUp 0.6s ease-out 0.35s both;
+}
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  justify-content: center;
+}
+.add-btn:hover { border-color: var(--accent-ia); color: var(--accent-ia); }
+.add-form {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-top: 1rem;
+}
+.add-form.open { display: block; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+.form-group label {
+  display: block;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 300;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  color: var(--text);
+  font-family: 'Lora', serif;
+  font-size: 0.9rem;
+}
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent-ia); }
+.form-full { grid-column: 1 / -1; }
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+/* ── BUTTONS ─── */
+.btn-primary {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-ia), var(--accent-digit));
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(155,93,229,0.3); }
+.btn-secondary {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+
+/* ── EXPORT BAR ─── */
+.export-bar {
+  padding: 1rem clamp(1.5rem, 4vw, 3rem) 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  animation: fadeUp 0.6s ease-out 0.4s both;
+}
+
+/* ── FOOTER ─── */
+.footer {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 200;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+}
+
+/* ── ANIMATIONS ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ LANDING SCREEN ══════════════════ -->
+<div class="landing" id="landing">
+  <h1 class="landing-title">Dashboard de Diagnosi</h1>
+  <p class="landing-sub">Importa una an&agrave;lisi generada per Claude o comen&ccedil;a una sessi&oacute; en blanc</p>
+
+  <div class="landing-options">
+    <div class="landing-card" onclick="openImportModal()">
+      <svg class="landing-card-icon" viewBox="0 0 48 48" fill="none">
+        <rect x="6" y="6" width="36" height="36" rx="8" stroke="var(--accent-ia)" stroke-width="1.5"/>
+        <path d="M16 20h16M16 26h10" stroke="var(--accent-ia)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M30 30l4 4M34 30l-4 4" stroke="var(--accent-digit)" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="landing-card-title" style="color:var(--accent-ia)">Importar an&agrave;lisi</div>
+      <div class="landing-card-desc">Enganxa el JSON generat per Claude despr&eacute;s d'analitzar la web del client. Inclou perfil, pain points i recomanacions.</div>
+    </div>
+
+    <div class="landing-card" onclick="startBlank()">
+      <svg class="landing-card-icon" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="18" stroke="var(--accent-org)" stroke-width="1.5"/>
+        <path d="M18 24h12M24 18v12" stroke="var(--accent-org)" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="landing-card-title" style="color:var(--accent-org)">Sessi&oacute; en blanc</div>
+      <div class="landing-card-desc">Comen&ccedil;a un dashboard buit i afegeix pain points manualment durant la reuni&oacute; amb el client.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ IMPORT MODAL ══════════════════ -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-title">Importar an&agrave;lisi de Claude</div>
+    <div class="modal-hint">
+      Enganxa el JSON que Claude ha generat despr&eacute;s d'analitzar la web del client.
+      Tamb&eacute; pots arrossegar un fitxer <strong>.json</strong>.
+    </div>
+    <div class="file-drop-label">
+      <div class="file-input-wrapper">
+        <input type="file" id="fileInput" accept=".json" onchange="handleFile(event)">
+        <button class="file-btn" onclick="document.getElementById('fileInput').click()">Carrega fitxer .json</button>
+      </div>
+      <span>o enganxa aqu&iacute; sota</span>
+    </div>
+    <textarea class="json-area" id="jsonArea" placeholder='{"client": {...}, "painPoints": [...]}'
+      ondragover="this.classList.add('drag-over');event.preventDefault()"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event)"></textarea>
+    <div class="modal-error" id="importError"></div>
+    <div class="merge-option" id="mergeOption" style="display:none;">
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;margin-top:0.8rem;">
+        <input type="checkbox" id="mergeCheck" checked
+          style="width:18px;height:18px;accent-color:var(--accent-ia);cursor:pointer;">
+        <span style="font-family:'Unbounded',sans-serif;font-weight:400;font-size:0.75rem;color:var(--text-mid);">
+          Fusionar amb dades existents <span style="font-size:0.65rem;color:var(--text-dim)">(afegir nous pain points, mantenir els actuals)</span>
+        </span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeImportModal()">Cancel&middot;lar</button>
+      <button class="btn-primary" onclick="importJSON()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div class="dashboard" id="dashboard">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Dashboard de Diagnosi</h1>
+      <p id="headerSub">Explorant oportunitats per al client</p>
+    </div>
+    <div class="header-right">
+      <div class="client-badge" id="clientBadge">Client</div>
+      <div class="header-actions">
+        <button class="icon-btn" title="Exportar JSON" onclick="exportJSON()">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 10v2.5A1.5 1.5 0 004.5 14h7a1.5 1.5 0 001.5-1.5V10M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn" title="Importar m&eacute;s dades" onclick="openImportModal()">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 6v-2.5A1.5 1.5 0 014.5 2h7A1.5 1.5 0 0113 3.5V6M8 14V6M5 9l3-3 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn" title="Tornar a l'inici" onclick="backToLanding()">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2 8h12M2 8l4-4M2 8l4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-bar" id="profileBar" style="display:none;">
+    <div class="profile-card" id="profileCard"></div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-number" id="statTotal" style="color:var(--text)">0</div>
+      <div class="stat-label">Pain points</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="statIA" style="color:var(--accent-ia)">0</div>
+      <div class="stat-label">Oportunitats IA</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="statDigit" style="color:var(--accent-digit)">0</div>
+      <div class="stat-label">Digitalitzaci&oacute;</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="statOrg" style="color:var(--accent-org)">0</div>
+      <div class="stat-label">Organitzaci&oacute;</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Tots</button>
+    <button class="filter-btn" data-filter="ia" onclick="setFilter('ia')">IA</button>
+    <button class="filter-btn" data-filter="digit" onclick="setFilter('digit')">Digitalitzaci&oacute;</button>
+    <button class="filter-btn" data-filter="org" onclick="setFilter('org')">Organitzaci&oacute;</button>
+  </div>
+
+  <div class="main-grid" id="mainGrid"></div>
+
+  <div class="add-section">
+    <button class="add-btn" onclick="toggleForm()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" stroke="currentColor" stroke-width="1.2"/><path d="M6 9h6M9 6v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Afegir pain point
+    </button>
+    <div class="add-form" id="addForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>T&iacute;tol</label>
+          <input type="text" id="ppTitle" placeholder="Nom del pain point">
+        </div>
+        <div class="form-group">
+          <label>Tipus</label>
+          <select id="ppType">
+            <option value="ia">IA</option>
+            <option value="digit">Digitalitzaci&oacute;</option>
+            <option value="org">Organitzaci&oacute;</option>
+          </select>
+        </div>
+        <div class="form-group form-full">
+          <label>Descripci&oacute;</label>
+          <textarea id="ppDesc" placeholder="Qu&egrave; has detectat durant la reuni&oacute;..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Impacte (1-10)</label>
+          <input type="number" id="ppImpact" min="1" max="10" value="5">
+        </div>
+        <div class="form-group">
+          <label>Facilitat (1-10)</label>
+          <input type="number" id="ppEase" min="1" max="10" value="5">
+        </div>
+        <div class="form-group form-full">
+          <label>Soluci&oacute; proposada</label>
+          <textarea id="ppSolution" placeholder="Possible recomanaci&oacute;..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Prioritat</label>
+          <select id="ppPriority">
+            <option value="normal">Normal</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" onclick="toggleForm()">Cancel&middot;lar</button>
+          <button class="btn-primary" onclick="addPainPoint()">Afegir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="matrix-section">
+    <div class="matrix-title">Matriu Esfor&ccedil;-Benefici</div>
+    <div class="matrix-grid">
+      <div class="matrix-quadrant">
+        <div class="matrix-quadrant-label q-quick">Quick wins</div>
+        <div class="matrix-items" id="qQuick"></div>
+      </div>
+      <div class="matrix-quadrant">
+        <div class="matrix-quadrant-label q-strategic">Estrat&egrave;gics</div>
+        <div class="matrix-items" id="qStrategic"></div>
+      </div>
+      <div class="matrix-quadrant">
+        <div class="matrix-quadrant-label q-reconsider">Reconsiderar</div>
+        <div class="matrix-items" id="qReconsider"></div>
+      </div>
+      <div class="matrix-quadrant">
+        <div class="matrix-quadrant-label q-plan">Planificar</div>
+        <div class="matrix-items" id="qPlan"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Bexperience &middot; Dashboard de Diagnosi &middot; 2026</div>
+</div>
+
+<script>
+/* ══════════════════ STATE ══════════════════ */
+let state = {
+  client: null,
+  painPoints: [],
+  nextId: 1,
+  currentFilter: 'all'
+};
+
+/* ══════════════════ LANDING & NAVIGATION ══════════════════ */
+function openImportModal() {
+  document.getElementById('importModal').classList.add('open');
+  document.getElementById('jsonArea').value = '';
+  document.getElementById('importError').classList.remove('show');
+  // Show merge option if there are already pain points loaded
+  const mergeOpt = document.getElementById('mergeOption');
+  if (state.painPoints.length > 0) {
+    mergeOpt.style.display = 'block';
+    document.getElementById('mergeCheck').checked = true;
+  } else {
+    mergeOpt.style.display = 'none';
+  }
+}
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('open');
+}
+function backToLanding() {
+  if (!confirm('Segur que vols tornar? Es perdran les dades no exportades.')) return;
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('landing').style.display = 'flex';
+  state = { client: null, painPoints: [], nextId: 1, currentFilter: 'all' };
+}
+function startBlank() {
+  const name = prompt('Nom del client (opcional):') || 'Client';
+  state.client = { name };
+  state.painPoints = [];
+  state.nextId = 1;
+  showDashboard();
+}
+
+/* ══════════════════ IMPORT ══════════════════ */
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => { document.getElementById('jsonArea').value = ev.target.result; };
+  reader.readAsText(file);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  e.target.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (ev) => { document.getElementById('jsonArea').value = ev.target.result; };
+    reader.readAsText(file);
+  }
+}
+
+function importJSON() {
+  const raw = document.getElementById('jsonArea').value.trim();
+  const errEl = document.getElementById('importError');
+  if (!raw) {
+    errEl.textContent = 'Enganxa el JSON primer.';
+    errEl.classList.add('show');
+    return;
+  }
+  try {
+    const data = JSON.parse(raw);
+    const merging = state.painPoints.length > 0 && document.getElementById('mergeCheck').checked;
+
+    // Parse incoming client info
+    const newClient = data.client || data.perfil || { name: 'Client' };
+
+    // Parse incoming pain points
+    const pp = data.painPoints || data.pain_points || data.oportunitats || [];
+    const newPPs = pp.map(p => ({
+      title: p.title || p.titol || p.nom || 'Pain point',
+      type: normalizeType(p.type || p.tipus || p.categoria || 'ia'),
+      desc: p.desc || p.descripcio || p.description || '',
+      impact: clampNum(p.impact || p.impacte || 5),
+      ease: clampNum(p.ease || p.facilitat || 5),
+      priority: (p.priority || p.prioritat || 'normal'),
+      solution: p.solution || p.solucio || p.recomanacio || '',
+      source: p.source || 'web'
+    }));
+
+    if (merging) {
+      // MERGE MODE: keep existing pain points, add new ones (skip duplicates by title)
+      const existingTitles = new Set(state.painPoints.map(p => p.title.toLowerCase().trim()));
+      let added = 0;
+      let skipped = 0;
+      newPPs.forEach(p => {
+        if (existingTitles.has(p.title.toLowerCase().trim())) {
+          skipped++;
+        } else {
+          state.painPoints.push({ ...p, id: state.nextId++ });
+          existingTitles.add(p.title.toLowerCase().trim());
+          added++;
+        }
+      });
+      // Merge client info (enrich, don't overwrite)
+      if (newClient) {
+        Object.keys(newClient).forEach(key => {
+          if (newClient[key] && !state.client[key]) {
+            state.client[key] = newClient[key];
+          }
+        });
+      }
+      closeImportModal();
+      showDashboard();
+      // Show merge result notification
+      showNotification(`Fusi\u00f3 completada: ${added} nous pain points afegits${skipped ? ', ' + skipped + ' duplicats ignorats' : ''}`);
+    } else {
+      // REPLACE MODE: overwrite everything
+      state.client = newClient;
+      state.painPoints = newPPs.map((p, i) => ({ ...p, id: i + 1 }));
+      state.nextId = state.painPoints.length + 1;
+      closeImportModal();
+      showDashboard();
+    }
+  } catch(e) {
+    errEl.textContent = 'JSON inv\u00e0lid: ' + e.message;
+    errEl.classList.add('show');
+  }
+}
+
+function showNotification(msg) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:1.5rem;right:1.5rem;z-index:200;background:var(--bg);border:1px solid var(--accent-org);border-radius:12px;padding:1rem 1.5rem;font-family:Unbounded,sans-serif;font-size:0.75rem;color:var(--accent-org);animation:fadeUp 0.3s ease-out;max-width:400px;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.5s'; setTimeout(() => el.remove(), 500); }, 4000);
+}
+
+function normalizeType(t) {
+  t = t.toLowerCase();
+  if (t.includes('ia') || t.includes('ai') || t.includes('intel')) return 'ia';
+  if (t.includes('digit') || t.includes('tech') || t.includes('tecnol')) return 'digit';
+  if (t.includes('org') || t.includes('cult') || t.includes('gesti') || t.includes('human')) return 'org';
+  return 'ia';
+}
+function clampNum(n) { return Math.max(1, Math.min(10, parseInt(n) || 5)); }
+
+/* ══════════════════ EXPORT ══════════════════ */
+function exportJSON() {
+  const data = {
+    client: state.client,
+    painPoints: state.painPoints,
+    exportDate: new Date().toISOString(),
+    tool: 'Bexperience Dashboard Diagnosi'
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const clientName = (state.client.name || 'client').toLowerCase().replace(/\s+/g, '-');
+  a.href = url;
+  a.download = `diagnosi-${clientName}-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════ SHOW DASHBOARD ══════════════════ */
+function showDashboard() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('dashboard').classList.add('active');
+
+  // Client badge
+  const name = state.client.name || state.client.nom || 'Client';
+  document.getElementById('clientBadge').textContent = name;
+  document.getElementById('headerSub').textContent = 'Explorant oportunitats per a ' + name;
+
+  // Profile bar
+  const profileFields = [];
+  const c = state.client;
+  if (c.sector) profileFields.push({ label: 'Sector', value: c.sector });
+  if (c.web || c.url) profileFields.push({ label: 'Web', value: c.web || c.url });
+  if (c.empleats || c.mida || c.size) profileFields.push({ label: 'Mida', value: c.empleats || c.mida || c.size });
+  if (c.serveis || c.services) profileFields.push({ label: 'Serveis', value: c.serveis || c.services });
+  if (c.ubicacio || c.location) profileFields.push({ label: 'Ubicaci\u00f3', value: c.ubicacio || c.location });
+  if (c.notes) profileFields.push({ label: 'Notes', value: c.notes });
+
+  if (profileFields.length > 0) {
+    document.getElementById('profileBar').style.display = 'block';
+    document.getElementById('profileCard').innerHTML = profileFields.map(f =>
+      `<div><div class="profile-item-label">${f.label}</div><div class="profile-item-value">${f.value}</div></div>`
+    ).join('');
+  } else {
+    document.getElementById('profileBar').style.display = 'none';
+  }
+
+  render();
+}
+
+/* ══════════════════ RENDER ══════════════════ */
+function render() {
+  updateStats();
+  renderCards();
+  renderMatrix();
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = state.painPoints.length;
+  document.getElementById('statIA').textContent = state.painPoints.filter(p => p.type === 'ia').length;
+  document.getElementById('statDigit').textContent = state.painPoints.filter(p => p.type === 'digit').length;
+  document.getElementById('statOrg').textContent = state.painPoints.filter(p => p.type === 'org').length;
+}
+
+function renderCards() {
+  const grid = document.getElementById('mainGrid');
+  const filtered = state.currentFilter === 'all'
+    ? state.painPoints
+    : state.painPoints.filter(p => p.type === state.currentFilter);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-dim)">
+      <p style="font-family:'Unbounded',sans-serif;font-weight:200;font-size:0.9rem">
+        ${state.painPoints.length === 0 ? 'Cap pain point encara. Afegeix-ne un per comen\u00e7ar.' : 'Cap pain point d\'aquest tipus.'}
+      </p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => {
+    const typeLabel = { ia: 'IA', digit: 'Digitalitzaci\u00f3', org: 'Organitzaci\u00f3' }[p.type];
+    const typeClass = { ia: 'tag-ia', digit: 'tag-digit', org: 'tag-org' }[p.type];
+    const accentColor = { ia: 'var(--accent-ia)', digit: 'var(--accent-digit)', org: 'var(--accent-org)' }[p.type];
+    const sourceClass = { web: 'web', meeting: 'meeting', manual: 'manual' }[p.source || 'manual'];
+    const sourceLabel = { web: 'An\u00e0lisi web', meeting: 'Reuni\u00f3', manual: 'Manual' }[p.source || 'manual'];
+
+    return `
+      <div class="pain-card" data-type="${p.type}" data-id="${p.id}" onclick="toggleCard(this)">
+        <div class="pain-card-header">
+          <div class="pain-card-title">${esc(p.title)}</div>
+          <div class="pain-card-tags">
+            <span class="tag ${typeClass}">${typeLabel}</span>
+            ${p.priority === 'urgent' ? '<span class="tag tag-urgent">Urgent</span>' : ''}
+            <span class="source-tag ${sourceClass}">${sourceLabel}</span>
+          </div>
+        </div>
+        <div class="pain-card-desc">${esc(p.desc)}</div>
+        <div class="pain-card-detail">
+          <div class="impact-bar">
+            <div class="impact-label">Impacte</div>
+            <div class="impact-track"><div class="impact-fill" style="width:${p.impact*10}%;background:${accentColor}"></div></div>
+            <div class="impact-value" style="color:${accentColor}">${p.impact}</div>
+          </div>
+          <div class="impact-bar">
+            <div class="impact-label">Facilitat</div>
+            <div class="impact-track"><div class="impact-fill" style="width:${p.ease*10}%;background:var(--accent-org)"></div></div>
+            <div class="impact-value" style="color:var(--accent-org)">${p.ease}</div>
+          </div>
+          ${p.solution ? `<div class="solution-box"><h4>Recomanaci\u00f3</h4><p>${esc(p.solution)}</p></div>` : ''}
+          <div class="card-actions">
+            <button class="card-action-btn delete" onclick="event.stopPropagation();deletePP(${p.id})">Eliminar</button>
+            <button class="card-action-btn" onclick="event.stopPropagation();markSource(${p.id},'meeting')">Confirmat en reuni\u00f3</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMatrix() {
+  const quadrants = { quick: [], strategic: [], plan: [], reconsider: [] };
+  state.painPoints.forEach(p => {
+    const color = { ia: 'var(--accent-ia)', digit: 'var(--accent-digit)', org: 'var(--accent-org)' }[p.type];
+    const item = { name: p.title, color };
+    if (p.impact >= 6 && p.ease >= 6) quadrants.quick.push(item);
+    else if (p.impact >= 6 && p.ease < 6) quadrants.strategic.push(item);
+    else if (p.impact < 6 && p.ease >= 6) quadrants.plan.push(item);
+    else quadrants.reconsider.push(item);
+  });
+  ['quick', 'strategic', 'plan', 'reconsider'].forEach(q => {
+    const el = document.getElementById('q' + q.charAt(0).toUpperCase() + q.slice(1));
+    el.innerHTML = quadrants[q].map(item =>
+      `<div class="matrix-item"><span class="matrix-dot" style="background:${item.color}"></span>${item.name}</div>`
+    ).join('');
+  });
+}
+
+/* ══════════════════ INTERACTIONS ══════════════════ */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function toggleCard(el) {
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.pain-card').forEach(c => c.classList.remove('expanded'));
+  if (!wasExpanded) el.classList.add('expanded');
+}
+
+function setFilter(type) {
+  state.currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-filter="${type}"]`).classList.add('active');
+  renderCards();
+}
+
+function toggleForm() { document.getElementById('addForm').classList.toggle('open'); }
+
+function addPainPoint() {
+  const title = document.getElementById('ppTitle').value.trim();
+  if (!title) return;
+  state.painPoints.push({
+    id: state.nextId++,
+    title,
+    type: document.getElementById('ppType').value,
+    desc: document.getElementById('ppDesc').value.trim() || 'Pendent de descripci\u00f3',
+    impact: clampNum(document.getElementById('ppImpact').value),
+    ease: clampNum(document.getElementById('ppEase').value),
+    priority: document.getElementById('ppPriority').value,
+    solution: document.getElementById('ppSolution').value.trim() || '',
+    source: 'meeting'
+  });
+  ['ppTitle', 'ppDesc', 'ppSolution'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ppImpact').value = 5;
+  document.getElementById('ppEase').value = 5;
+  toggleForm();
+  render();
+}
+
+function deletePP(id) {
+  if (!confirm('Eliminar aquest pain point?')) return;
+  state.painPoints = state.painPoints.filter(p => p.id !== id);
+  render();
+}
+
+function markSource(id, source) {
+  const pp = state.painPoints.find(p => p.id === id);
+  if (pp) { pp.source = source; render(); }
+}
+</script>
+</body>
+</html>
