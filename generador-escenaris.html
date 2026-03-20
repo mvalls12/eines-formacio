@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador d'Escenaris IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root {
+  --bg: #f4f6f9;
+  --white: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e2e8f0;
+  --border-focus: #4DDDE8;
+  --navy: #0a2e5c;
+  --navy-mid: #1a4a8a;
+  --navy-light: #e8eef8;
+  --cyan: #4DDDE8;
+  --cyan-dim: rgba(77,221,232,0.12);
+  --cyan-border: rgba(77,221,232,0.3);
+  --text: #1a2b45;
+  --text-mid: #4a6080;
+  --text-dim: #8a9bb0;
+  --green: #0d9e72;
+  --green-dim: #e6f9f4;
+  --green-border: rgba(13,158,114,0.25);
+  --amber: #c87a00;
+  --amber-dim: #fff7e6;
+  --amber-border: rgba(200,122,0,0.25);
+  --red: #c0314a;
+  --red-dim: #fff0f3;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(10,46,92,0.08), 0 4px 12px rgba(10,46,92,0.06);
+  --shadow-md: 0 4px 16px rgba(10,46,92,0.12), 0 1px 4px rgba(10,46,92,0.08);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Lora', Georgia, serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(77,221,232,0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(77,221,232,0); }
+}
+
+/* ── LAYOUT ── */
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 32px) 80px;
+}
+
+/* ── HEADER ── */
+.header {
+  margin-bottom: 40px;
+  animation: fadeUp 0.5s ease both;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.eyebrow-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: pulse 2.5s infinite;
+}
+.eyebrow-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.header h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(20px, 3.5vw, 32px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+.header h1 span { color: var(--cyan); }
+.header p {
+  font-size: clamp(13px, 1.5vw, 15px);
+  color: var(--text-mid);
+  line-height: 1.7;
+  max-width: 520px;
+}
+
+/* ── PHASES ── */
+.phases {
+  display: flex;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.5s 0.05s ease both;
+}
+.phase-item {
+  flex: 1;
+  padding: 14px 16px;
+  border-right: 1px solid var(--border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+.phase-item:last-child { border-right: none; }
+.phase-item.active { background: var(--navy-light); }
+.phase-item.done { background: var(--green-dim); }
+.phase-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--cyan);
+  border-radius: 0;
+}
+.phase-item.done::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green);
+}
+.phase-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 3px;
+  transition: color 0.3s;
+}
+.phase-item.active .phase-num { color: var(--navy-mid); }
+.phase-item.done   .phase-num { color: var(--green); }
+.phase-label {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(9px, 1.1vw, 11px);
+  font-weight: 400;
+  color: var(--text-dim);
+  transition: color 0.3s;
+}
+.phase-item.active .phase-label { color: var(--navy); font-weight: 700; }
+.phase-item.done   .phase-label { color: var(--green); }
+
+/* ── PANELS ── */
+.panel { display: none; animation: fadeUp 0.4s ease both; }
+.panel.active { display: block; }
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(13px, 1.8vw, 16px);
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+.card-sub {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-grid.single { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+.field input,
+.field select,
+.field textarea {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  resize: vertical;
+  -webkit-appearance: none;
+}
+.field input::placeholder,
+.field textarea::placeholder { color: var(--text-dim); font-style: italic; }
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--cyan);
+  background: var(--white);
+  box-shadow: 0 0 0 3px var(--cyan-dim);
+}
+.field select option { background: white; color: var(--text); }
+
+/* ── CHIPS ── */
+.chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 7px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  font-size: 12px;
+  font-family: 'Lora', serif;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--white);
+  user-select: none;
+}
+.chip:hover { border-color: var(--cyan); color: var(--navy); }
+.chip.selected {
+  border-color: var(--cyan);
+  color: var(--navy);
+  background: var(--cyan-dim);
+  font-weight: 600;
+}
+
+/* ── INFO BOX ── */
+.info-box {
+  background: var(--navy-light);
+  border: 1px solid rgba(10,46,92,0.12);
+  border-left: 3px solid var(--navy);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.info-box p { font-size: 13px; color: var(--navy); line-height: 1.65; }
+.info-box strong { font-weight: 700; }
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 13px 24px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary {
+  background: var(--navy);
+  color: white;
+  box-shadow: 0 2px 8px rgba(10,46,92,0.25);
+}
+.btn-primary:hover {
+  background: var(--navy-mid);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(10,46,92,0.3);
+}
+.btn-secondary {
+  background: var(--cyan);
+  color: var(--navy);
+  box-shadow: 0 2px 8px rgba(77,221,232,0.3);
+}
+.btn-secondary:hover {
+  background: #3bcdd8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(77,221,232,0.4);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-mid);
+  border: 1.5px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+.btn-row { display: flex; gap: 12px; align-items: center; margin-top: 24px; flex-wrap: wrap; }
+
+/* ── CODI D'ACCÉS ── */
+.lock-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 24px;
+  animation: fadeUp 0.5s ease both;
+}
+.lock-icon {
+  width: 56px; height: 56px;
+  background: var(--navy-light);
+  border: 1.5px solid rgba(10,46,92,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navy);
+}
+.lock-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+}
+.lock-sub {
+  font-size: 13px;
+  color: var(--text-mid);
+  text-align: center;
+  line-height: 1.6;
+}
+.lock-input-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.lock-input {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  width: 200px;
+  letter-spacing: 0.1em;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.lock-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-dim); }
+.lock-error {
+  font-size: 12px;
+  color: var(--red);
+  text-align: center;
+  display: none;
+}
+.lock-error.visible { display: block; }
+
+/* ── CONFIG SUMMARY ── */
+.config-summary {
+  background: var(--navy-light);
+  border: 1px solid rgba(10,46,92,0.1);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+.ci-label {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 3px;
+}
+.ci-value { font-size: 12px; color: var(--navy); font-weight: 600; line-height: 1.4; }
+
+/* ── LOADING ── */
+.loading-indicator {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: var(--white);
+  border: 1.5px solid var(--cyan-border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.loading-indicator.visible { display: flex; }
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+.loading-text { font-size: 13px; color: var(--text-mid); font-style: italic; }
+
+/* ── SCENARIO CARDS ── */
+.scenarios-container { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.scenario-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.25s ease;
+  animation: fadeUp 0.4s ease both;
+}
+.scenario-card:hover { box-shadow: var(--shadow-md); border-color: var(--cyan-border); }
+.scenario-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.scenario-header:hover { background: var(--surface-2); }
+.scenario-meta { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.scenario-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--navy-light);
+  border: 1px solid rgba(10,46,92,0.15);
+  border-radius: 6px;
+  padding: 4px 10px;
+  flex-shrink: 0;
+}
+.scenario-title-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(11px, 1.3vw, 13px);
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scenario-toggle {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  color: var(--text-dim);
+  transition: transform 0.3s ease;
+}
+.scenario-card.open .scenario-toggle { transform: rotate(180deg); }
+.scenario-body {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+}
+.scenario-card.open .scenario-body { display: block; }
+
+.scenario-section { margin-top: 18px; }
+.ss-label {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.ss-content { font-size: 13.5px; line-height: 1.75; color: var(--text-mid); }
+
+.prompt-box {
+  background: var(--navy);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  position: relative;
+}
+.prompt-text {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.85);
+}
+.copy-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.18); color: white; }
+.copy-btn.copied { color: var(--cyan); border-color: var(--cyan-border); }
+
+.repte-box {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* ── ERROR ── */
+.error-msg {
+  display: none;
+  background: var(--red-dim);
+  border: 1px solid rgba(192,49,74,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--red);
+  margin-bottom: 16px;
+}
+.error-msg.visible { display: block; }
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-brand {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.config-link {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.config-link:hover { color: var(--navy); }
+
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .phases { flex-direction: column; }
+  .phase-item { border-right: none; border-bottom: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-eyebrow">
+      <div class="eyebrow-dot"></div>
+      <span class="eyebrow-text">Bexperience · Formació IA</span>
+    </div>
+    <h1>Escenaris <span>a mida</span><br>per al teu equip</h1>
+    <p>Genera situacions reals basades en el teu rol i els reptes del teu dia a dia. Cada escenari inclou context, prompt per practicar i un repte per aplicar aquesta setmana.</p>
+  </div>
+
+  <!-- PHASES -->
+  <div class="phases" id="phases">
+    <div class="phase-item" id="ph0">
+      <div class="phase-num">01</div>
+      <div class="phase-label">Configuració</div>
+    </div>
+    <div class="phase-item active" id="ph1">
+      <div class="phase-num">02</div>
+      <div class="phase-label">El teu perfil</div>
+    </div>
+    <div class="phase-item" id="ph2">
+      <div class="phase-num">03</div>
+      <div class="phase-label">Escenaris</div>
+    </div>
+  </div>
+
+  <!-- LOCK SCREEN (codi formadora) -->
+  <div id="lock-screen" class="lock-screen" style="display:none;">
+    <div class="lock-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+    <div>
+      <div class="lock-title">Accés de configuració</div>
+      <div class="lock-sub" style="margin-top:6px;">Introdueix el codi per configurar la sessió</div>
+    </div>
+    <div class="lock-input-wrap">
+      <input class="lock-input" type="password" id="lock-input" placeholder="········"
+        onkeydown="if(event.key==='Enter') checkCode()">
+      <button class="btn btn-primary" onclick="checkCode()">Entrar</button>
+    </div>
+    <div class="lock-error" id="lock-error">Codi incorrecte</div>
+  </div>
+
+  <!-- PANEL CONFIG -->
+  <div class="panel" id="panel-config">
+    <div class="card">
+      <div class="card-title">Configuració de la sessió</div>
+      <div class="card-sub">Omple el context de l'empresa. Els participants no veuran aquesta pantalla.</div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Nom de l'empresa (opcional)</label>
+          <input type="text" id="cfg-empresa" placeholder="Ex: Empresa ABC">
+        </div>
+        <div class="field">
+          <label>Sector *</label>
+          <select id="cfg-sector">
+            <option value="">Selecciona un sector...</option>
+            <optgroup label="Industrial">
+              <option value="manteniment industrial">Manteniment industrial</option>
+              <option value="fabricació i producció">Fabricació i producció</option>
+              <option value="qualitat i inspecció">Qualitat i inspecció</option>
+              <option value="enginyeria i disseny tècnic">Enginyeria i disseny tècnic</option>
+              <option value="logística i cadena de subministrament">Logística i cadena de subministrament</option>
+              <option value="vendes i atenció al client industrial">Vendes i atenció al client industrial</option>
+            </optgroup>
+            <optgroup label="Salut">
+              <option value="atenció primària i urgències">Atenció primària i urgències</option>
+              <option value="gestió hospitalària">Gestió hospitalària</option>
+              <option value="infermeria i cures">Infermeria i cures</option>
+              <option value="administració sanitària">Administració sanitària</option>
+            </optgroup>
+            <optgroup label="Farmàcia i R+D">
+              <option value="investigació i desenvolupament farmacèutic">Investigació i desenvolupament</option>
+              <option value="producció farmacèutica">Producció farmacèutica</option>
+              <option value="assumptes regulatoris">Assumptes regulatoris</option>
+            </optgroup>
+            <optgroup label="Serveis i consultoria">
+              <option value="consultoria i serveis professionals">Consultoria i serveis professionals</option>
+              <option value="gestió i administració d'empresa">Gestió i administració</option>
+              <option value="recursos humans i formació">Recursos humans i formació</option>
+              <option value="màrqueting i comunicació">Màrqueting i comunicació</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Eina d'IA de la sessió</label>
+          <select id="cfg-eina">
+            <option value="Microsoft Copilot">Microsoft Copilot</option>
+            <option value="ChatGPT">ChatGPT</option>
+            <option value="Claude (Anthropic)">Claude (Anthropic)</option>
+            <option value="Gemini">Gemini</option>
+            <option value="IA generativa en general">IA generativa en general</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Escenaris per participant</label>
+          <div class="chip-group" id="chips-num" style="padding-top:4px;">
+            <div class="chip" data-val="2">2</div>
+            <div class="chip selected" data-val="3">3</div>
+            <div class="chip" data-val="4">4</div>
+            <div class="chip" data-val="5">5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid single">
+        <div class="field">
+          <label>Context de l'empresa — reptes, processos, situació actual</label>
+          <textarea id="cfg-context" rows="3"
+            placeholder="Ex: L'equip dedica molt temps a redactar ofertes tècniques. Els processos de revisió interna són llargs. Hi ha dificultat per transmetre el valor tècnic al client final..."></textarea>
+        </div>
+      </div>
+
+      <div id="error-config" class="error-msg">Cal seleccionar un sector per continuar.</div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="saveConfig()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Activar per als participants
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL PARTICIPANT -->
+  <div class="panel active" id="panel-participant">
+    <div id="config-summary" class="config-summary" style="display:none;"></div>
+
+    <div class="card">
+      <div class="card-title">Qui ets i què fas?</div>
+      <div class="card-sub" id="p-sub">En 30 segons, digue'ns el teu rol i un repte habitual. Generarem escenaris fets a mida per a tu.</div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>El teu nom</label>
+          <input type="text" id="p-nom" placeholder="Nom i cognoms">
+        </div>
+        <div class="field">
+          <label>El teu rol o càrrec</label>
+          <input type="text" id="p-rol" placeholder="Ex: Tècnic de manteniment, Cap de producció...">
+        </div>
+      </div>
+
+      <div class="form-grid single">
+        <div class="field">
+          <label>Quina tasca et menja més temps o et resulta més feixuga?</label>
+          <textarea id="p-tasca" rows="2"
+            placeholder="Ex: Redactar informes, respondre correus repetitius, preparar presentacions per a clients..."></textarea>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nivell d'experiència amb IA</label>
+        <div class="chip-group" id="chips-nivell" style="padding-top:4px;">
+          <div class="chip selected" data-val="cap experiència prèvia">Sense experiència</div>
+          <div class="chip" data-val="he provat alguna eina">He provat alguna eina</div>
+          <div class="chip" data-val="l'uso ocasionalment">L'uso ocasionalment</div>
+          <div class="chip" data-val="l'uso cada dia">L'uso cada dia</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="error-participant" class="error-msg">Cal que emplis el nom, el rol i la tasca per continuar.</div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateScenarios()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v2M7 10v2M2 7h2M10 7h2M3.5 3.5l1.4 1.4M9.1 9.1l1.4 1.4M3.5 10.5l1.4-1.4M9.1 4.9l1.4-1.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Genera els meus escenaris
+      </button>
+    </div>
+  </div>
+
+  <!-- PANEL ESCENARIS -->
+  <div class="panel" id="panel-scenarios">
+    <div id="loading-indicator" class="loading-indicator">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-text">Generant escenaris personalitzats...</div>
+    </div>
+
+    <div id="error-gen" class="error-msg"></div>
+    <div class="scenarios-container" id="scenarios-container"></div>
+
+    <div id="btn-row-final" class="btn-row" style="display:none;">
+      <button class="btn btn-ghost" onclick="backToParticipant()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 3L2 7l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Nou participant
+      </button>
+      <button class="btn btn-primary" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="4" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M4 8h6M4 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Imprimir / PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">Bexperience · Generador d'Escenaris IA · 2026</div>
+    <a class="config-link" onclick="showLock()" href="#">Configuració</a>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   CONFIGURACIÓ — EDITA AQUÍ
+   ════════════════════════════════════════ */
+const CODI_ACCES = 'bex2026';
+/* Per canviar el codi, modifica el valor entre cometes */
+
+/* ── ESTAT ── */
+let config = {
+  empresa: '', sector: '', eina: 'Microsoft Copilot',
+  context: '', numEscenaris: 3
+};
+let participant = {
+  nom: '', rol: '', tasca: '',
+  nivell: 'cap experiència prèvia'
+};
+let configSaved = false;
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  initChips();
+
+  // Carrega config guardada
+  const saved = localStorage.getItem('bex_escenaris_config');
+  if (saved) {
+    try {
+      config = JSON.parse(saved);
+      configSaved = true;
+      showParticipantMode();
+    } catch(e) {
+      showParticipantEmpty();
+    }
+  } else {
+    showParticipantEmpty();
+  }
+});
+
+function showParticipantEmpty() {
+  // Sense config guardada — mode participant genèric
+  setActivePanel('panel-participant');
+  setPhase(1);
+}
+
+function showParticipantMode() {
+  setActivePanel('panel-participant');
+  setPhase(1);
+  renderConfigSummary();
+}
+
+/* ── LOCK ── */
+function showLock() {
+  setActivePanel('lock-screen');
+  document.getElementById('lock-input').value = '';
+  document.getElementById('lock-error').classList.remove('visible');
+  setTimeout(() => document.getElementById('lock-input').focus(), 100);
+}
+
+function checkCode() {
+  const val = document.getElementById('lock-input').value.trim();
+  if (val === CODI_ACCES) {
+    setActivePanel('panel-config');
+    // Omple formulari amb config actual
+    document.getElementById('cfg-empresa').value = config.empresa || '';
+    document.getElementById('cfg-sector').value  = config.sector  || '';
+    document.getElementById('cfg-eina').value    = config.eina    || 'Microsoft Copilot';
+    document.getElementById('cfg-context').value = config.context || '';
+    document.querySelectorAll('#chips-num .chip').forEach(c => {
+      c.classList.toggle('selected', parseInt(c.dataset.val) === config.numEscenaris);
+    });
+  } else {
+    document.getElementById('lock-error').classList.add('visible');
+    document.getElementById('lock-input').value = '';
+    document.getElementById('lock-input').focus();
+  }
+}
+
+/* ── CONFIG ── */
+function saveConfig() {
+  const sector = document.getElementById('cfg-sector').value;
+  const errEl  = document.getElementById('error-config');
+  if (!sector) { errEl.classList.add('visible'); return; }
+  errEl.classList.remove('visible');
+
+  config.empresa = document.getElementById('cfg-empresa').value.trim();
+  config.sector  = sector;
+  config.eina    = document.getElementById('cfg-eina').value;
+  config.context = document.getElementById('cfg-context').value.trim();
+
+  localStorage.setItem('bex_escenaris_config', JSON.stringify(config));
+  configSaved = true;
+  showParticipantMode();
+}
+
+function renderConfigSummary() {
+  const el = document.getElementById('config-summary');
+  if (!config.sector) { el.style.display = 'none'; return; }
+  el.style.display = 'grid';
+  const empresa = config.empresa || 'No especificada';
+  el.innerHTML = `
+    ${config.empresa ? `<div><div class="ci-label">Empresa</div><div class="ci-value">${config.empresa}</div></div>` : ''}
+    <div><div class="ci-label">Sector</div><div class="ci-value">${config.sector}</div></div>
+    <div><div class="ci-label">Eina IA</div><div class="ci-value">${config.eina}</div></div>
+    <div><div class="ci-label">Escenaris</div><div class="ci-value">${config.numEscenaris} per persona</div></div>
+  `;
+  // Actualitza el subtítol del participant
+  const sub = document.getElementById('p-sub');
+  if (config.empresa) {
+    sub.textContent = `En 30 segons, digue'ns el teu rol i un repte habitual a ${config.empresa}. Generarem escenaris fets a mida per a tu.`;
+  }
+}
+
+/* ── CHIPS ── */
+function initChips() {
+  document.querySelectorAll('#chips-num .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#chips-num .chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      config.numEscenaris = parseInt(chip.dataset.val);
+    });
+  });
+  document.querySelectorAll('#chips-nivell .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#chips-nivell .chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      participant.nivell = chip.dataset.val;
+    });
+  });
+}
+
+/* ── NAVEGACIÓ ── */
+function setActivePanel(id) {
+  document.getElementById('lock-screen').style.display    = 'none';
+  document.getElementById('panel-config').classList.remove('active');
+  document.getElementById('panel-participant').classList.remove('active');
+  document.getElementById('panel-scenarios').classList.remove('active');
+
+  if (id === 'lock-screen') {
+    document.getElementById('lock-screen').style.display = 'flex';
+  } else {
+    document.getElementById(id).classList.add('active');
+  }
+}
+
+function setPhase(n) {
+  document.querySelectorAll('.phase-item').forEach((p, i) => {
+    p.classList.remove('active', 'done');
+    if (i < n) p.classList.add('done');
+    if (i === n) p.classList.add('active');
+  });
+}
+
+function backToParticipant() {
+  document.getElementById('scenarios-container').innerHTML = '';
+  document.getElementById('btn-row-final').style.display = 'none';
+  document.getElementById('error-gen').classList.remove('visible');
+  document.getElementById('p-nom').value   = '';
+  document.getElementById('p-rol').value   = '';
+  document.getElementById('p-tasca').value = '';
+  document.querySelectorAll('#chips-nivell .chip').forEach((c, i) => c.classList.toggle('selected', i === 0));
+  participant.nivell = 'cap experiència prèvia';
+  setActivePanel('panel-participant');
+  setPhase(1);
+}
+
+/* ── GENERATE ── */
+async function generateScenarios() {
+  const nom   = document.getElementById('p-nom').value.trim();
+  const rol   = document.getElementById('p-rol').value.trim();
+  const tasca = document.getElementById('p-tasca').value.trim();
+  const errEl = document.getElementById('error-participant');
+
+  if (!nom || !rol || !tasca) { errEl.classList.add('visible'); return; }
+  errEl.classList.remove('visible');
+
+  participant.nom   = nom;
+  participant.rol   = rol;
+  participant.tasca = tasca;
+
+  setActivePanel('panel-scenarios');
+  setPhase(2);
+
+  const loadingEl  = document.getElementById('loading-indicator');
+  const loadingTxt = document.getElementById('loading-text');
+  const errGen     = document.getElementById('error-gen');
+  const container  = document.getElementById('scenarios-container');
+  const btnRowEl   = document.getElementById('btn-row-final');
+
+  loadingEl.classList.add('visible');
+  container.innerHTML = '';
+  btnRowEl.style.display = 'none';
+  errGen.classList.remove('visible');
+
+  const phrases = [
+    config.empresa ? `Analitzant el context de ${config.empresa}...` : 'Analitzant el context de l\'empresa...',
+    `Adaptant al rol de ${participant.rol}...`,
+    'Generant escenaris personalitzats...',
+    'Preparant els prompts de pràctica...'
+  ];
+  let idx = 0;
+  const phraseInt = setInterval(() => {
+    idx = (idx + 1) % phrases.length;
+    loadingTxt.textContent = phrases[idx];
+  }, 2200);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2500,
+        system: `Ets un expert en formació en IA. Generes escenaris de pràctica altament personalitzats per a treballadors de qualsevol sector. Els escenaris han de ser molt concrets, realistes i immediatament aplicables al dia a dia real d'aquesta persona. Respons SEMPRE en JSON vàlid, sense cap text addicional, sense markdown, sense backticks.`,
+        messages: [{ role: 'user', content: buildPrompt() }]
+      })
+    });
+
+    clearInterval(phraseInt);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `Error ${response.status}`);
+    }
+
+    const data   = await response.json();
+    const raw    = data.content.map(b => b.type === 'text' ? b.text : '').join('');
+    const clean  = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    loadingEl.classList.remove('visible');
+    renderScenarios(container, parsed.escenaris || []);
+    btnRowEl.style.display = 'flex';
+
+  } catch (err) {
+    clearInterval(phraseInt);
+    loadingEl.classList.remove('visible');
+    errGen.textContent = 'No s\'han pogut generar els escenaris: ' + err.message + '. Torna-ho a intentar.';
+    errGen.classList.add('visible');
+    btnRowEl.style.display = 'flex';
+  }
+}
+
+function buildPrompt() {
+  const empresaPart = config.empresa ? `Empresa: ${config.empresa}.` : '';
+  const contextPart = config.context ? `Context i reptes identificats: ${config.context}.` : '';
+  const sectorInfo  = config.sector  || 'sector empresarial general';
+
+  return `Genera exactament ${config.numEscenaris} escenaris de pràctica d'${config.eina} per al participant següent:
+
+PARTICIPANT:
+- Nom: ${participant.nom}
+- Rol: ${participant.rol}
+- Tasca que li menja més temps: ${participant.tasca}
+- Nivell IA: ${participant.nivell}
+
+CONTEXT:
+- Sector: ${sectorInfo}
+- ${empresaPart}
+- ${contextPart}
+
+INSTRUCCIONS:
+1. Cada escenari ha de ser una situació concreta i realista que AQUESTA persona viuria a la seva feina
+2. Connecta directament amb la tasca que li menja temps o amb el seu rol específic
+3. El prompt ha de ser llest per copiar i enganxar a ${config.eina} ara mateix — complet, específic, útil
+4. El repte setmanal ha de ser petit, assolible en 5-10 minuts, amb un resultat tangible
+5. Adapta la complexitat al nivell: ${participant.nivell}
+6. Si no hi ha context d'empresa, usa situacions típiques del sector: ${sectorInfo}
+
+Respon ÚNICAMENT amb aquest JSON:
+{
+  "escenaris": [
+    {
+      "titol": "Títol curt i directe (màx 8 paraules)",
+      "situacio": "Descripció real en 2-3 frases. Ha de sonar com el dia a dia d'aquesta persona.",
+      "objectiu": "Què aprendrà o resoldrà amb aquest escenari.",
+      "prompt": "Prompt complet i llest per usar a ${config.eina}.",
+      "repte": "Un repte concret per aplicar aquesta setmana."
+    }
+  ]
+}`;
+}
+
+function renderScenarios(container, escenaris) {
+  if (!escenaris || escenaris.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-mid); font-size:14px; padding:20px 0;">No s\'han pogut generar escenaris. Torna-ho a intentar.</p>';
+    return;
+  }
+  escenaris.forEach((e, i) => {
+    const card = document.createElement('div');
+    card.className = 'scenario-card';
+    card.style.animationDelay = `${i * 0.1}s`;
+    const promptId = `prompt-${i}`;
+    card.innerHTML = `
+      <div class="scenario-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="scenario-meta">
+          <span class="scenario-num">0${i+1}</span>
+          <span class="scenario-title-text">${e.titol || 'Escenari ' + (i+1)}</span>
+        </div>
+        <svg class="scenario-toggle" viewBox="0 0 20 20" fill="none">
+          <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-section">
+          <div class="ss-label">Situació</div>
+          <div class="ss-content">${e.situacio || ''}</div>
+        </div>
+        <div class="scenario-section">
+          <div class="ss-label">Que practicaràs</div>
+          <div class="ss-content">${e.objectiu || ''}</div>
+        </div>
+        <div class="scenario-section">
+          <div class="ss-label">Prompt per a ${config.eina || 'l\'eina IA'}</div>
+          <div class="prompt-box">
+            <button class="copy-btn" onclick="copyPrompt('${promptId}', this)">Copiar</button>
+            <div class="prompt-text" id="${promptId}">${e.prompt || ''}</div>
+          </div>
+        </div>
+        <div class="scenario-section">
+          <div class="ss-label">Repte per aquesta setmana</div>
+          <div class="repte-box">${e.repte || ''}</div>
+        </div>
+      </div>
+    `;
+    if (i === 0) card.classList.add('open');
+    container.appendChild(card);
+  });
+}
+
+function copyPrompt(id, btn) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copiat';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
